@@ -2,25 +2,21 @@
 
 --==< KnetterbalWildyAgility 1.0 >==--
 
-
 --==< Credits: Higgins for GUI and teaching me a BUNCH >==--
-
 
 --==< Description: >==--
 - Will do the Wilderness Agility Course
 - Will recover if you fail the obstacle (Surefooted is recommended tho)
-- Will use Eat food ability when dropping below 60 hp
+- Will use Eat food ability when dropping below 60 hp and after an XP drop
 - Use Demonic skull for XP boost but BEWARE PK'ers
-- GUI is added poorly due to waits in the script. the rates however does somewhat compare to Runemetrics
-
-
-
+- GUI is added poorly due to waits in the script. The rates, however, do somewhat compare to Runemetrics
 
 ]]
 
 local API = require("api")
 local UTILS = require("utils")
 local startTime = os.time()
+local lastXpDropTime = startTime
 
 local ID = {
     OBSTACLE_PIPE = 65362,
@@ -37,22 +33,31 @@ local foodID = 40293 -- Change this to your specific food ID
 
 --== Settings ==--
 
+local lastXpDropTime = 0 -- Initialize lastXpDropTime variable
+
 local function healthCheck()
     local hp = API.GetHPrecent()
-    if hp < 60 then -- you can change the hp when to eat here
+    local xp = API.GetSkillXP("AGILITY")
+
+    if hp < 60 and xp > lastXpDropTime then
         API.WaitUntilMovingandAnimEnds()
         if API.InvItemFound2(foodID) then
             API.DoAction_Ability("Eat Food", 1, API.OFF_ACT_GeneralInterface_route)
             API.RandomSleep2(800, 800, 800)
+            lastXpDropTime = xp -- Update lastXpDropTime
         else
             print("Out of food. Stopping the script.")
             API.RandomSleep2(2000, 2000, 2000) -- Add a sleep for visibility
+            API.Write_LoopyLoop(false)         -- Stop the script if out of food
             return false                       -- Stop the script if out of food
         end
     end
+
     return true -- Continue script execution
 end
+
 -- ========GUI stuff========
+
 local startXp = API.GetSkillXP("AGILITY")
 
 local function round(val, decimal)
@@ -131,7 +136,7 @@ end
 
 local function FailedObstacleCheck(currentObstacle)
     if API.PInArea21(2993, 3007, 10340, 10365) then
-        print('In the dungeon...Getting out')
+        print('In the dungeon... Getting out')
         interact_with_obstacle(ID.LADDER)
         API.RandomSleep2(600, 600, 600)
     elseif currentObstacle == ID.ROPESWING then
@@ -142,6 +147,7 @@ local function FailedObstacleCheck(currentObstacle)
         API.WaitUntilMovingandAnimEnds()                                                                   -- Wait for the animation to end (optional)
     end
 end
+
 -- Flags to track obstacle completion
 local obstacleCompleted = {
     [ID.OBSTACLE_PIPE] = false,
@@ -158,6 +164,7 @@ local function checkForXPDrop()
     local currentXP = API.GetSkillXP("AGILITY")
     if currentXP > lastXP then
         lastXP = currentXP
+        lastXpDropTime = os.time() -- Update the last XP drop time
         return true
     else
         return false
