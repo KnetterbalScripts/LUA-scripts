@@ -133,9 +133,9 @@ local function FailedObstacleCheck(currentObstacle)
         interact_with_obstacle(ID.LADDER)
         API.WaitUntilMovingandAnimEnds()
         API.RandomSleep2(600, 600, 600)
-    elseif currentObstacle == ID.ROPESWING then
+    elseif currentObstacle == ID.ROPESWING and API.PInArea21(2970, 3015, 3925, 3961) then
         API.WaitUntilMovingandAnimEnds()
-        API.DoAction_Tile(WPOINT.new(3005, 3952, 0))
+        API.DoAction_Tile(WPOINT.new(3005 + API.Math_RandomNumber(1), 3951 + API.Math_RandomNumber(1), 0))
         API.RandomSleep2(600, 600, 600)
     end
 end
