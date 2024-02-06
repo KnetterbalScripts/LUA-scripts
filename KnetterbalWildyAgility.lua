@@ -12,11 +12,9 @@
 - GUI is added poorly due to waits in the script. The rates, however, do somewhat compare to Runemetrics
 
 ]]
-
 local API = require("api")
 local UTILS = require("utils")
 local startTime = os.time()
-local lastXpDropTime = startTime
 
 local ID = {
     OBSTACLE_PIPE = 65362,
@@ -27,11 +25,8 @@ local ID = {
     LADDER = 32015
 }
 
---== Settings ==--
-
-local foodID = 40293 -- Change this to your specific food ID
-
---== Settings ==--
+-- Settings
+local foodID = 40293     -- Change this to your specific food ID
 
 local lastXpDropTime = 0 -- Initialize lastXpDropTime variable
 
@@ -55,9 +50,7 @@ local function healthCheck()
 
     return true -- Continue script execution
 end
-
 -- ========GUI stuff========
-
 local startXp = API.GetSkillXP("AGILITY")
 
 local function round(val, decimal)
@@ -136,15 +129,14 @@ end
 
 local function FailedObstacleCheck(currentObstacle)
     if API.PInArea21(2993, 3007, 10340, 10365) then
-        print('In the dungeon... Getting out')
+        print('In the dungeon...Getting')
         interact_with_obstacle(ID.LADDER)
+        API.WaitUntilMovingandAnimEnds()
         API.RandomSleep2(600, 600, 600)
     elseif currentObstacle == ID.ROPESWING then
-        print("Need to go to the tile before the ropeswing")
-        local targetTile = WPOINT.new(3005 + API.Math_RandomNumber(1), 3951 + API.Math_RandomNumber(1), 0) -- Replace with the correct waypoint
-        API.DoAction_Tile(targetTile)                                                                      -- Click on the tile
-        API.RandomSleep2(600, 600, 600)                                                                    -- Add another random sleep after ladder interaction
-        API.WaitUntilMovingandAnimEnds()                                                                   -- Wait for the animation to end (optional)
+        API.WaitUntilMovingandAnimEnds()
+        API.DoAction_Tile(WPOINT.new(3005, 3952, 0))
+        API.RandomSleep2(600, 600, 600)
     end
 end
 
@@ -164,7 +156,6 @@ local function checkForXPDrop()
     local currentXP = API.GetSkillXP("AGILITY")
     if currentXP > lastXP then
         lastXP = currentXP
-        lastXpDropTime = os.time() -- Update the last XP drop time
         return true
     else
         return false
@@ -196,12 +187,6 @@ local function waitForXPDrop()
             return true
         end
 
-        if currentObstacle == ID.ROPESWING or currentObstacle == ID.STEPPING_STONE or currentObstacle == ID.LOG_BALANCE then
-            if not UTILS.waitForAnimation(0, 5) then
-                return false -- Animation didn't complete, consider it a fail
-            end
-        end
-
         sleep()
     end
 end
@@ -230,12 +215,11 @@ while API.Read_LoopyLoop(true) do
         if waitForXPDrop() then
             obstacleCompleted[currentObstacle] = true
         else
-            if (currentObstacle == ID.ROPESWING or currentObstacle == ID.STEPPING_STONE or currentObstacle == ID.LOG_BALANCE) then
-                FailedObstacleCheck(currentObstacle)
-                API.RandomSleep2(600, 600, 600)
+            if not obstacleFail(currentObstacle) then
+                interactWithObstacle(currentObstacle)
+            else
+                lastObstacle = nil
             end
-            interactWithObstacle(currentObstacle)
-            lastObstacle = nil
         end
     else
         if currentObstacle == ID.OBSTACLE_PIPE then
