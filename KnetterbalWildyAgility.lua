@@ -196,6 +196,12 @@ local function waitForXPDrop()
             return true
         end
 
+        if currentObstacle == ID.ROPESWING or currentObstacle == ID.STEPPING_STONE or currentObstacle == ID.LOG_BALANCE then
+            if not UTILS.waitForAnimation(0, 5) then
+                return false -- Animation didn't complete, consider it a fail
+            end
+        end
+
         sleep()
     end
 end
@@ -224,11 +230,12 @@ while API.Read_LoopyLoop(true) do
         if waitForXPDrop() then
             obstacleCompleted[currentObstacle] = true
         else
-            if not obstacleFail(currentObstacle) then
-                interactWithObstacle(currentObstacle)
-            else
-                lastObstacle = nil
+            if (currentObstacle == ID.ROPESWING or currentObstacle == ID.STEPPING_STONE or currentObstacle == ID.LOG_BALANCE) then
+                FailedObstacleCheck(currentObstacle)
+                API.RandomSleep2(600, 600, 600)
             end
+            interactWithObstacle(currentObstacle)
+            lastObstacle = nil
         end
     else
         if currentObstacle == ID.OBSTACLE_PIPE then
