@@ -107,7 +107,7 @@ local function checkbank()
 
     for k, v in pairs(items) do
         if v.itemid1 == FoodID then
-            print("Found: " .. v.itemid1_size .. " Raw food.")
+            --print("Found: " .. v.itemid1_size .. " Raw food.")
             rawFoodBanked = v.itemid1_size -- Update the count of raw food banked
         end
     end
@@ -127,7 +127,7 @@ local function printProgressReport(final)
     local bankedMsg = ""
 
     if rawFoodBanked > 0 then
-        bankedMsg = " | Raw food banked: " .. rawFoodBanked
+        bankedMsg = " | Raw Food Stock: " .. rawFoodBanked
     else
         bankedMsg = " | Out of Raw food"
     end
