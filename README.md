@@ -1,1 +1,1 @@
-![alt text](https://github.com/KnetterbalScripts/LUA-scripts/Nardah Cooker.png)
+![alt text](https://github.com/KnetterbalScripts/LUA-scripts/NardahCooker.png)
