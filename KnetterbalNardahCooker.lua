@@ -1,21 +1,3 @@
---[[
--------------=====CREDITS=====-------------
-        Higgins for teaching and GUI.
--------------=====CREDITS=====-------------
-
------------=====DESCRIPTION=====-----------
-    * Cooks every food in Nardah on the clay oven *
-    * Checks bank for amount of raw food. *
-    * Will shutdown if out of food. *
------------=====DESCRIPTION=====-----------
-
------------=====HOW TO USE=====------------
-    * Set the FoodID you want to cook. *
-    * Set the preset to what you are using *
-    * Start with full inventory in the bank *
------------=====HOW TO USE=====------------
-]]
-
 local API = require("api")
 local startTime = os.time()
 MAX_IDLE_TIME_MINUTES = 8
@@ -51,9 +33,28 @@ local ID = {
 
 ----------==Settings==-------------
 
-local FoodID = ID.RAW_BELTFISH
+local FoodID = ID.RAW_CATFISH
 local preset = 2
 ----------==Settings==-------------
+
+--[[
+-------------=====CREDITS=====-------------
+        Higgins for teaching and GUI.
+-------------=====CREDITS=====-------------
+
+-----------=====DESCRIPTION=====-----------
+    * Cooks every food in Nardah on the clay oven *
+    * Checks bank for amount of raw food. *
+    * Will shutdown if out of food. *
+-----------=====DESCRIPTION=====-----------
+
+-----------=====HOW TO USE=====------------
+    * Set the FoodID you want to cook. *
+    * Set the preset to what you are using *
+    * Start with full inventory in the bank *
+-----------=====HOW TO USE=====------------
+]]
+
 
 -- ========GUI stuff======== From Higgins !!
 local startXp = API.GetSkillXP("COOKING")
@@ -99,18 +100,43 @@ local function calcProgressPercentage(skill, currentExp)
     return math.floor(progressPercentage)
 end
 
+local rawFoodBanked = 0 -- Initialize the count of raw food banked
+
+local function checkbank()
+    local items = API.FetchBankArray()
+
+    for k, v in pairs(items) do
+        if v.itemid1 == FoodID then
+            print("Found: " .. v.itemid1_size .. " Raw food.")
+            rawFoodBanked = v.itemid1_size -- Update the count of raw food banked
+        end
+    end
+
+    -- If raw food is found, return true
+    return rawFoodBanked > 0
+end
+
 local function printProgressReport(final)
     local skill = "COOKING"
     local currentXp = API.GetSkillXP(skill)
     local elapsedMinutes = (os.time() - startTime) / 60
-    local diffXp = math.abs(currentXp - startXp);
-    local xpPH = round((diffXp * 60) / elapsedMinutes, 1);
+    local diffXp = math.abs(currentXp - startXp)
+    local xpPH = round((diffXp * 60) / elapsedMinutes, 1)
     local time = formatElapsedTime(startTime)
     local currentLevel = API.XPLevelTable(API.GetSkillXP(skill))
+    local bankedMsg = ""
+
+    if rawFoodBanked > 0 then
+        bankedMsg = " | Raw food banked: " .. rawFoodBanked
+    else
+        bankedMsg = " | Out of Raw food"
+    end
+
     IGP.radius = calcProgressPercentage(skill, API.GetSkillXP(skill)) / 100
     IGP.string_value = time .. " | " .. string.lower(skill):gsub("^%l", string.upper) .. ": " .. currentLevel ..
         " | XP/H: " ..
-        formatNumber(xpPH) .. " | XP: " .. formatNumber(diffXp) .. " | Food Cooked: " .. totalFishCooked
+        formatNumber(xpPH) .. " | XP: " .. formatNumber(diffXp) .. " | Food Cooked: " .. totalFishCooked ..
+        bankedMsg -- Add raw food banked information
 end
 
 local function setupGUI()
@@ -126,27 +152,6 @@ local function drawGUI()
 end
 
 setupGUI()
-
-local function checkbank()
-    local items = API.FetchBankArray()
-    local foundRawFood = false
-
-    for k, v in pairs(items) do
-        if v.itemid1 == FoodID then
-            print("Found: " .. v.itemid1_size .. " Raw food.")
-            if v.itemid1_size > 0 then
-                foundRawFood = true
-                return -- Exit the function immediately if raw food is found
-            end
-        end
-    end
-
-    -- If no raw food is found, perform necessary actions
-    print("Out of Raw food.")
-    FoodBanked = false
-    API.Write_LoopyLoop(false)
-    print("Shutting down.. Get more food :)")
-end
 
 local cookingInterface = {
     InterfaceComp5.new(1371, 7, -1, -1, 0),
@@ -220,9 +225,6 @@ while API.Read_LoopyLoop(true) do
             end
         end
     end
-
-
-
 
     printProgressReport()
 end
